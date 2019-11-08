@@ -1,0 +1,10 @@
+<resources>
+    <string name="app_name">Payment Merchant</string>
+    <string name="input_harga">Input Harga</string>
+    <string name="qrcode">Scan QR Code</string>
+    <string name="nfc">Tap Kartu NFC</string>
+    <string name="smartphone">Input No HP Customer</string>
+    <string name="update">Update Status Pembayaran</string>
+    <string name="confirmation">Konfirmasi Pembayaran</string>
+    <string name="transfer">Trasnfer Dana</string>
+</resources>
