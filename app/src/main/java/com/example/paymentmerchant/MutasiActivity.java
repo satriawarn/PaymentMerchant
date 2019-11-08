@@ -56,12 +56,13 @@ public class MutasiActivity extends AppCompatActivity implements MutasiView {
         TableRow tr = new TableRow(this);
         tr.setLayoutParams(getLayoutParams());
 
-        tr.addView(getTextView(0, "NO", Color.BLACK, Typeface.BOLD, Color.GRAY, Gravity.CENTER));
+        tr.addView(getTextView(0, "#", Color.BLACK, Typeface.BOLD, Color.GRAY, Gravity.CENTER));
         tr.addView(getTextView(0, "Detail", Color.BLACK, Typeface.BOLD, Color.GRAY, Gravity.CENTER));
         tr.addView(getTextView(0, "Jumlah", Color.BLACK, Typeface.BOLD, Color.GRAY, Gravity.CENTER));
         tr.addView(getTextView(0, "Tanggal", Color.BLACK, Typeface.BOLD, Color.GRAY, Gravity.CENTER));
 
         tableLayout.addView(tr, getTblLayoutParams());
+        tableLayout.setStretchAllColumns(true);
     }
 
     @NonNull

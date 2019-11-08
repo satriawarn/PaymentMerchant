@@ -5,6 +5,7 @@ import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 
 import android.Manifest;
+import android.bluetooth.BluetoothAdapter;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.os.Bundle;
@@ -110,7 +111,15 @@ public class QRCodeActivity extends AppCompatActivity implements ZXingScannerVie
     public void handleResult(Result result) {
         progressBar.setVisibility(View.VISIBLE);
         kodeKartu = result.getText();
-        payWithQr();
+
+        BluetoothAdapter mBluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
+
+        if (!mBluetoothAdapter.isEnabled()){
+            mBluetoothAdapter.enable();
+        } else {
+            payWithQr();
+        }
+
     }
 
     private void payWithQr(){
@@ -131,7 +140,10 @@ public class QRCodeActivity extends AppCompatActivity implements ZXingScannerVie
     @Override
     public void getPayQr(QrResponse qrResponse) {
         if (qrResponse.getStatus()==1){
-            Intent intent = new Intent(QRCodeActivity.this, ConfirmationActivity.class);
+            Intent intent = new Intent(QRCodeActivity.this, PrintActivity.class);
+            intent.putExtra("belanja", qrResponse.getMessage());
+            intent.putExtra("total", qrResponse.getNominal_transaksi());
+            intent.putExtra("tanya","belanja");
             startActivity(intent);
             finish();
         } else {

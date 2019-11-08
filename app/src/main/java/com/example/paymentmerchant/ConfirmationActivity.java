@@ -48,30 +48,25 @@ public class ConfirmationActivity extends AppCompatActivity implements Runnable 
 
         print = findViewById(R.id.button9);
 
-        tanya = getIntent().getStringExtra("mau print apa");
-
-        total = getIntent().getStringExtra("nominal");
-        norek = getIntent().getStringExtra("norek");
-        sisa = getIntent().getStringExtra("akhir");
-        bank = getIntent().getStringExtra("bank");
 
         jum = getIntent().getStringExtra("total");
         tot = getIntent().getStringExtra("psn");
 
 
-        Toast.makeText(this, tanya, Toast.LENGTH_SHORT).show();
+        getDevice();
         print.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 if (!bluetoothSocket.isConnected()){
                     Log.d(TAG, "print: socket bluetooth null");
-                    getDevice();
+//                    getDevice();
                 } else {
-                    if (tanya.equalsIgnoreCase("qrcode")){
-                        printin();
-                    } else if (tanya.equalsIgnoreCase("transfer")){
-                        printinTransfer();
-                    }
+                    printin();
+//                    if (tanya.equalsIgnoreCase("qrcode")){
+//                        printin();
+//                    } else if (tanya.equalsIgnoreCase("transfer")){
+//                        printinTransfer();
+//                    }
                 }
             }
         });
@@ -80,6 +75,7 @@ public class ConfirmationActivity extends AppCompatActivity implements Runnable 
     public void home(View view) {
         Intent intent = new Intent(ConfirmationActivity.this, MainActivity.class);
         startActivity(intent);
+        finish();
     }
     @Override
     public void onBackPressed() {
@@ -96,14 +92,13 @@ public class ConfirmationActivity extends AppCompatActivity implements Runnable 
             if (!bluetoothAdapter.isEnabled()) {
                 Log.v(TAG, "LOGV getDevice: "+"!mBluetoothAdapter.isEnabled()" );
                 Intent enableBtIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
-                startActivityForResult(enableBtIntent,
-                        REQUEST_ENABLE_BT);
+                startActivityForResult(enableBtIntent, REQUEST_ENABLE_BT);
             } else {
                 mDeviceAddress=Utils.readSharedSetting(this,"deviceaddress","");
                 if (mDeviceAddress.equalsIgnoreCase(""))
                 {
                     ListPairedDevices();
-                    Intent connectIntent = new Intent(ConfirmationActivity.this, DeviceListActivity.class);
+                    Intent connectIntent = new Intent(ConfirmationActivity.this, DeviceListActivity1.class);
                     startActivityForResult(connectIntent,
                             REQUEST_CONNECT_DEVICE);
                 }else {
@@ -131,7 +126,7 @@ public class ConfirmationActivity extends AppCompatActivity implements Runnable 
                                 +"  Cafetaria UGM"+ "\n\n" +
                                 "   \n\n" +
                                 "--------------------------------\n" +
-                                "Item                " +"Jus Jambu"+
+//                                "Item                " +"Jus Jambu"+
                                 "Harga                "+jum+
                                 "Ket                "+tot+"\n\n"+
                                 "       TERIMA KASIH ATAS\n" +
@@ -177,67 +172,7 @@ public class ConfirmationActivity extends AppCompatActivity implements Runnable 
         };
         t.start();
     }
-    protected void printinTransfer()
-    {
 
-
-        Thread t1 = new Thread() {
-            public void run() {
-                try {
-                    OutputStream os = bluetoothSocket.getOutputStream();
-                    String BILL = "";
-
-                    BILL = "         TRANSFER DANA  \n"+"     "
-                            +"  Berikut Detail Anda"+ "\n\n" +
-                            "   \n\n" +
-                            "--------------------------------\n" +
-                            "Anda Transfer ke Bank      "+bank+
-                            "Sejumlah                "+total+
-                            "No Rekeningnya          "+norek+
-                            "Terus Saldomu Tinggal    "+sisa+"\n\n"+
-                            "       TERIMA KASIH ATAS\n" +
-                            "         DAAADAAAAA     \n\n\n";
-
-
-
-                    byte[] cc = new byte[]{0x1B,0x21,0x00};  // 0- normal size text
-                    byte[] bb = new byte[]{0x1B,0x21,0x08};  // 1- only bold text
-                    byte[] bb2 = new byte[]{0x1B,0x21,0x20}; // 2- bold with medium text
-                    byte[] bb3 = new byte[]{0x1B,0x21,0x10}; // 3- bold with large text
-                    os.write(bb);
-                    //This is printer specific code you can comment ==== > Start
-
-                    // Setting height
-//                    int gs = 29;
-//                    os.write(intToByteArray(gs));
-//                    int h = 104;
-//                    os.write(intToByteArray(h));
-//                    int n = 162;
-//                    os.write(intToByteArray(n));
-//
-//                    // Setting Width
-//                    int gs_width = 29;
-//                    os.write(intToByteArray(gs_width));
-//                    int w = 119;
-//                    os.write(intToByteArray(w));
-//                    int n_width = 2;
-//                    os.write(intToByteArray(n_width));
-//                    byte[] format = { 27, 33, 0 };
-//                    byte[] arrayOfByte1 = { 27, 33, 0 };
-//                    format[2] = ((byte)(0x8 | arrayOfByte1[2]));
-//
-//                    os.write(format);
-//
-//                    os.write(BILL.getBytes(),0,BILL.getBytes().length);
-                    os.write(BILL.getBytes());
-
-                } catch (Exception e) {
-                    Log.e(TAG,"LOGV print()"+e.getLocalizedMessage());
-                }
-            }
-        };
-        t1.start();
-    }
     private void ListPairedDevices() {
         Set<BluetoothDevice> mPairedDevices = bluetoothAdapter.getBondedDevices();
         if (mPairedDevices.size() > 0) {
@@ -291,8 +226,7 @@ public class ConfirmationActivity extends AppCompatActivity implements Runnable 
             case REQUEST_ENABLE_BT:
                 if (mResultCode == Activity.RESULT_OK) {
                     ListPairedDevices();
-                    Intent connectIntent = new Intent(ConfirmationActivity.this,
-                            DeviceListActivity.class);
+                    Intent connectIntent = new Intent(ConfirmationActivity.this, DeviceListActivity1.class);
                     startActivityForResult(connectIntent, REQUEST_CONNECT_DEVICE);
                 } else {
                     Toast.makeText(ConfirmationActivity.this, "Message", Toast.LENGTH_SHORT).show();

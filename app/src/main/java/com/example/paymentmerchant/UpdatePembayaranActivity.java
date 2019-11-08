@@ -66,10 +66,10 @@ public class UpdatePembayaranActivity extends AppCompatActivity implements Updat
     public void getCekStatus(CekBayarResponse cekBayarResponse) {
         if (cekBayarResponse.getStatus()==1){
             Toast.makeText(this, ""+cekBayarResponse.getMessage(), Toast.LENGTH_SHORT).show();
-            Intent intent = new Intent(UpdatePembayaranActivity.this, ConfirmationActivity.class);
-            intent.putExtra("mau print apa","qrcode");
+            Intent intent = new Intent(UpdatePembayaranActivity.this, PrintActivity.class);
+            intent.putExtra("tanya","belanja");
             intent.putExtra("total",cekBayarResponse.getNominal());
-            intent.putExtra("psn",cekBayarResponse.getMessage());
+            intent.putExtra("belanja",cekBayarResponse.getMessage());
                 startActivity(intent);
                 finish();
         } else {

@@ -20,8 +20,8 @@ import com.example.helper.Utils;
 import java.util.Set;
 
 
-public class DeviceListActivity extends AppCompatActivity {
-    protected static final String TAG = "DeviceListActivity";
+public class DeviceListActivity1 extends AppCompatActivity {
+    protected static final String TAG = "DeviceListActivity1";
     private BluetoothAdapter mBluetoothAdapter;
     private ArrayAdapter<String> mPairedDevicesArrayAdapter;
     private String deviceAddress;
@@ -74,7 +74,7 @@ public class DeviceListActivity extends AppCompatActivity {
 
                 Bundle mBundle = new Bundle();
                 mBundle.putString("DeviceAddress", mDeviceAddress);
-                Utils.saveSharedSetting(DeviceListActivity.this,"deviceaddress",mDeviceAddress);
+                Utils.saveSharedSetting(DeviceListActivity1.this,"deviceaddress",mDeviceAddress);
                 Intent mBackIntent = new Intent();
                 mBackIntent.putExtras(mBundle);
                 setResult(Activity.RESULT_OK, mBackIntent);

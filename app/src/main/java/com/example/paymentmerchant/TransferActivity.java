@@ -3,6 +3,7 @@ package com.example.paymentmerchant;
 import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.AppCompatActivity;
 
+import android.bluetooth.BluetoothAdapter;
 import android.content.Intent;
 import android.os.Build;
 import android.os.Bundle;
@@ -79,7 +80,14 @@ public class TransferActivity extends AppCompatActivity implements BankView,Tran
         transferPresenter.transfer(jumlah,bankid,norekin,nohpcard);
     }
 
-    public void transfer(View view) {
+    public void enableBT(){
+        BluetoothAdapter mBluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
+        if (!mBluetoothAdapter.isEnabled()){
+            mBluetoothAdapter.enable();
+        }
+    }
+
+    public void transfer(final View view) {
         jumlah = total.getText().toString();
         norekin = norek.getText().toString();
         nohpcard = nohp.getText().toString();
@@ -95,11 +103,12 @@ public class TransferActivity extends AppCompatActivity implements BankView,Tran
                 .setPositiveListener("Oke",new iOSDialogClickListener() {
                     @Override
                     public void onClick(iOSDialog dialog) {
+                        enableBT();
                         transfer();
                         dialog.dismiss();
                     }
                 })
-                .setNegativeListener("Nggak", new iOSDialogClickListener() {
+                .setNegativeListener("Tidak", new iOSDialogClickListener() {
                     @Override
                     public void onClick(iOSDialog dialog) {
                         dialog.dismiss();
@@ -158,7 +167,7 @@ public class TransferActivity extends AppCompatActivity implements BankView,Tran
             intent.putExtra("norek",transferResponse.getNorek());
             intent.putExtra("akhir",transferResponse.getSaldo_akhir());
             intent.putExtra("bank",banktujuan);
-            intent.putExtra("mau print apa","transfer");
+            intent.putExtra("tanya","transfer");
             startActivity(intent);
             finish();
         } else {

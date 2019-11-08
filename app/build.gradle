@@ -5,7 +5,7 @@ android {
     buildToolsVersion "29.0.0"
     defaultConfig {
         applicationId "com.example.paymentmerchant"
-        minSdkVersion 15
+        minSdkVersion 23
         targetSdkVersion 28
         versionCode 1
         versionName "1.0"
@@ -67,4 +67,6 @@ dependencies {
             }
     implementation 'com.google.zxing:core:3.3.0'
     implementation 'com.gdacciaro:iosdialog:1.0.3'
+
+    implementation 'com.github.thiagoyou:bluetooth-mini-printer-library:1.0.0'
 }
