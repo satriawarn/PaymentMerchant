@@ -1,206 +1,319 @@
 package com.example.paymentmerchant;
 
-import androidx.appcompat.app.AppCompatActivity;
-
+import android.Manifest;
+import android.annotation.SuppressLint;
+import android.app.Activity;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
-import android.bluetooth.BluetoothSocket;
 import android.content.Intent;
+import android.content.pm.PackageManager;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
-import android.util.Log;
+import android.os.Message;
 import android.view.View;
 import android.widget.Button;
+import android.widget.ProgressBar;
 import android.widget.Toast;
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.lang.reflect.Method;
-import java.util.Set;
-import java.util.UUID;
 
-public class PrintActivity extends AppCompatActivity {
-    public static final String TAG = "logv"+PrintActivity.class.getSimpleName();
-    Button mainBtn;
-    BluetoothAdapter bluetoothAdapter;
-    BluetoothSocket socket;
-    BluetoothDevice bluetoothDevice;
-    OutputStream outputStream;
-    InputStream inputStream;
-    Thread workerThread;
-    byte[] readBuffer;
-    int readBufferPosition;
-    volatile boolean stopWorker;
-    String value = "";
-    String total,norek,sisa,bank;
+import androidx.annotation.NonNull;
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.app.ActivityCompat;
+
+
+import java.util.ArrayList;
+import java.util.List;
+
+import bluetooth.miniprinter.library.BluetoothService;
+import bluetooth.miniprinter.library.DeviceListActivity;
+import bluetooth.miniprinter.library.PrintHelper;
+
+
+public class PrintActivity extends AppCompatActivity implements View.OnClickListener {
+    public static final String TAG = "logv" + PrintActivity.class.getSimpleName();
+    Button print,connect;
+    private static final int REQUEST_ENABLE_BLUETOOTH = 100;
+    private static final int REQUEST_CONNECT_DEVICE = 101;
+    private BluetoothAdapter mBluetoothAdapter;
+    private BluetoothService mBluetoothService = null;
+    private boolean isRequestingBluetooth;
+    private ProgressBar progressBar;
+    private String nominal, bank, norek, sisa,tanya,jum,tot,belanja;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_print);
+        tanya = getIntent().getStringExtra("tanya");
 
-        mainBtn = findViewById(R.id.print);
-        total = getIntent().getStringExtra("nominal");
+        mBluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
+        if (mBluetoothAdapter == null) {
+            Toast.makeText(this, "Bluetooth is not available on your device", Toast.LENGTH_LONG).show();
+            finish();
+        }
+
+        initUI();
+
+        PermissionHandler.requestDefaultPermissions(this);
+    }
+
+    private void initUI() {
+        print = findViewById(R.id.button9);
+        progressBar = findViewById(R.id.progress_bar);
+
+        nominal = getIntent().getStringExtra("nominal");
+        bank = getIntent().getStringExtra("bank");
         norek = getIntent().getStringExtra("norek");
         sisa = getIntent().getStringExtra("akhir");
-        bank = getIntent().getStringExtra("bank");
 
-        mainBtn.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                IntentPrint("         TRANSFER DANA  \n"+"     "
-                        +"  Berikut Detail Anda"+ "\n\n" +
-                        "   \n\n" +
-                        "--------------------------------\n" +
-                        "Anda Transfer ke Bank      "+bank+
-                        "Sejumlah                "+total+
-                        "No Rekeningnya          "+norek+
-                        "Terus Saldomu Tinggal    "+sisa+"\n\n"+
-                        "       TERIMA KASIH ATAS\n" +
-                        "         DAAADAAAAA     \n\n\n");
-            }
-        });
+        jum = getIntent().getStringExtra("total");
+//        tot = getIntent().getStringExtra("psn");
+        belanja = getIntent().getStringExtra("belanja");
+        mBluetoothService = new BluetoothService(mHandler);
+
+        print.setOnClickListener(this);
     }
 
-    public void IntentPrint(String txtvalue)
-    {
-        byte[] buffer = txtvalue.getBytes();
-        byte[] PrintHeader = { (byte) 0xAA, 0x55,2,0 };
-        PrintHeader[3]=(byte) buffer.length;
-        InitPrinter();
-        if(PrintHeader.length>128)
-        {
-            value+="\nValue is more than 128 size\n";
-            Toast.makeText(this, value, Toast.LENGTH_LONG).show();
-        }
-        else
-        {
-            try
-            {
+    @Override
+    protected void onStart() {
+        super.onStart();
 
-                outputStream.write(txtvalue.getBytes());
-                outputStream.close();
-                socket.close();
-            }
-            catch(Exception ex)
-            {
-                value+=ex.toString()+ "\n" +"Excep IntentPrint \n";
-                Toast.makeText(this, value, Toast.LENGTH_LONG).show();
+        /* if Bluetooth is not on, request that it be enabled. */
+        /* otherwise, setup the session */
+        if (!mBluetoothAdapter.isEnabled() && !isRequestingBluetooth) {
+            isRequestingBluetooth = true;
+            Intent enableIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
+            startActivityForResult(enableIntent, REQUEST_ENABLE_BLUETOOTH);
+        } else {
+            if (mBluetoothService == null) {
+                initUI();
             }
         }
     }
-    public void InitPrinter()
-    {
-        bluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
-        try
-        {
-            if(!bluetoothAdapter.isEnabled())
-            {
-                Intent enableBluetooth = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
-                startActivityForResult(enableBluetooth, 0);
-            }
 
-            Set<BluetoothDevice> pairedDevices = bluetoothAdapter.getBondedDevices();
+    @Override
+    protected void onResume() {
+        super.onResume();
 
-            if(pairedDevices.size() > 0)
-            {
-                for(BluetoothDevice device : pairedDevices)
-                {
-                    if(device.getName().equals("SP200")) //Note, you will need to change this to match the name of your device
-                    {
-                        bluetoothDevice = device;
-                        break;
-                    }
-                }
-
-                UUID uuid = UUID.fromString("00001101-0000-1000-8000-00805F9B34FB"); //Standard SerialPortService ID
-                Method m = bluetoothDevice.getClass().getMethod("createRfcommSocket", new Class[]{int.class});
-                socket = (BluetoothSocket) m.invoke(bluetoothDevice, 1);
-                bluetoothAdapter.cancelDiscovery();
-                socket.connect();
-                outputStream = socket.getOutputStream();
-                inputStream = socket.getInputStream();
-                beginListenForData();
+        if (mBluetoothService != null) {
+            if (mBluetoothService.getState() == BluetoothService.STATE_NONE) {
+                mBluetoothService.start();
             }
-            else
-            {
-                value+="No Devices found";
-                Toast.makeText(this, value, Toast.LENGTH_LONG).show();
-                return;
-            }
-        }
-        catch(Exception ex)
-        {
-            value+=ex.toString()+ "\n" +" InitPrinter \n";
-            Toast.makeText(this, value, Toast.LENGTH_LONG).show();
         }
     }
-    void beginListenForData() {
-        try {
-            final Handler handler = new Handler();
 
-            // this is the ASCII code for a newline character
-            final byte delimiter = 10;
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
 
-            stopWorker = false;
-            readBufferPosition = 0;
-            readBuffer = new byte[1024];
+        /* stop the Bluetooth services */
+        if (mBluetoothService != null) {
+            mBluetoothService.stop();
+        }
+    }
 
-            workerThread = new Thread(new Runnable() {
-                public void run() {
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
 
-                    while (!Thread.currentThread().isInterrupted() && !stopWorker) {
+        if (requestCode == PermissionHandler.PERMISSION_REQUEST_CODE) {
+            /* check if all permissions has been granted */
+            PermissionHandler.requestDefaultPermissions(this);
+        }
+    }
 
-                        try {
+    @Override
+    public void onClick(View view) {
+        String printTransfer = "         TRANSFER DANA  \n"+"     "
+                +"  Berikut Detail Anda"+ "\n\n" +
+                "--------------------------------\n" +
+                "Anda Transfer ke Bank      "+bank+"\n"+
+                "Sejumlah            "+nominal+"\n"+
+                "No Rekeningnya       "+norek+"\n"+
+                "Saldomu Tinggal    "+sisa+"\n\n"+
+                "Simpan struk ini sebagai bukti transfer yang sah."+"\n\n"+
+                "       TERIMA KASIH\n" +
+                "         DAAADAAAAA     \n\n";
 
-                            int bytesAvailable = inputStream.available();
+        String printBelanja ="         PEMBAYARAN  \n"+"     "
+                +"  Merchant BPR"+ "\n\n" +
+                "--------------------------------\n" +
+                "Keterangan               " +belanja+"\n"+
+                "Harga                "+jum+ "\n\n"+
+                "Simpan struk ini sebagai bukti pembayaran yang sah."+"\n\n"+
+                "       TERIMA KASIH ATAS\n" +
+                "         KUNJUNGAN ANDA     \n\n";
 
-                            if (bytesAvailable > 0) {
+        if (mBluetoothService.getState() != BluetoothService.STATE_CONNECTED) {
+            Intent intent = new Intent(PrintActivity.this, DeviceListActivity.class);
+            startActivityForResult(intent, REQUEST_CONNECT_DEVICE);
+        } else {
+            if (tanya.equalsIgnoreCase("transfer")){
+                PrintHelper.print(mBluetoothService, printTransfer);
+            } else if (tanya.equalsIgnoreCase("belanja")){
+                PrintHelper.print(mBluetoothService, printBelanja);
+            }
 
-                                byte[] packetBytes = new byte[bytesAvailable];
-                                inputStream.read(packetBytes);
+        }
+    }
 
-                                for (int i = 0; i < bytesAvailable; i++) {
+    @Override
+    public void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
 
-                                    byte b = packetBytes[i];
-                                    if (b == delimiter) {
+        switch (requestCode) {
+            case REQUEST_CONNECT_DEVICE: {
+                /* when DeviceListActivity1 returns with a device to connect */
+                if (resultCode == Activity.RESULT_OK) {
+                    /* start loading animation */
+                    progressBar.setVisibility(View.VISIBLE);
 
-                                        byte[] encodedBytes = new byte[readBufferPosition];
-                                        System.arraycopy(
-                                                readBuffer, 0,
-                                                encodedBytes, 0,
-                                                encodedBytes.length
-                                        );
+                    /* get the device address */
+                    if (data.getExtras() != null) {
+                        String address = data.getExtras().getString(DeviceListActivity.EXTRA_DEVICE_ADDRESS);
 
-                                        // specify US-ASCII encoding
-                                        final String data = new String(encodedBytes, "US-ASCII");
-                                        readBufferPosition = 0;
-
-                                        // tell the user data were sent to bluetooth printer device
-                                        handler.post(new Runnable() {
-                                            public void run() {
-                                                Log.d("e", data);
-                                            }
-                                        });
-
-                                    } else {
-                                        readBuffer[readBufferPosition++] = b;
-                                    }
-                                }
-                            }
-
-                        } catch (IOException ex) {
-                            stopWorker = true;
+                        /* get the bluetooth device object */
+                        if (BluetoothAdapter.checkBluetoothAddress(address)) {
+                            /* attempt to connect to the device */
+                            BluetoothDevice device = mBluetoothAdapter.getRemoteDevice(address);
+                            mBluetoothService.connect(device);
                         }
-
                     }
                 }
-            });
+                break;
+            }
+            case REQUEST_ENABLE_BLUETOOTH: {
+                isRequestingBluetooth = false;
 
-            workerThread.start();
-
-        } catch (Exception e) {
-            e.printStackTrace();
+                /* when the request to enable Bluetooth returns */
+                if (resultCode == Activity.RESULT_OK) {
+                    /* bluetooth is now enabled, so set up a session */
+                    initUI();
+                } else {
+                    /* user did not enable Bluetooth or an error occurred */
+                    Toast.makeText(this, "Bluetooth Tidak Berfungsi", Toast.LENGTH_SHORT).show();
+                    finish();
+                }
+                break;
+            }
         }
+    }
+
+    @SuppressLint("HandlerLeak")
+    private final Handler mHandler = new Handler() {
+        @Override
+        public void handleMessage(Message msg) {
+            switch (msg.what) {
+                case BluetoothService.MSG_STATE_CHANGE: {
+                    /* disable btn and change text */
+                    if (msg.arg1 == BluetoothService.STATE_CONNECTED) {
+                        /* finish loading animation */
+                        progressBar.setVisibility(View.GONE);
+
+
+                        /* enable interface */
+                        print.setEnabled(true);
+
+                    }
+                    break;
+                }
+                case BluetoothService.MSG_DEVICE_NAME: {
+                    String deviceName = msg.getData().getString(BluetoothService.KEY_DEVICE_NAME);
+                    Toast.makeText(getApplicationContext(), "Connected to " + deviceName, Toast.LENGTH_SHORT).show();
+                    break;
+                }
+                case BluetoothService.MSG_TOAST: {
+                    /* finish loading animation */
+                    progressBar.setVisibility(View.GONE);
+
+                    Toast.makeText(getApplicationContext(), msg.getData().getString(BluetoothService.KEY_TOAST_MSG), Toast.LENGTH_SHORT).show();
+                    break;
+                }
+                case BluetoothService.MSG_CONNECTION_LOST: {
+                    /* finish loading animation */
+                    progressBar.setVisibility(View.GONE);
+
+                    Toast.makeText(getApplicationContext(), "Device connection was lost", Toast.LENGTH_SHORT).show();
+
+                    /* disable interface until select printer again */
+                    break;
+                }
+                case BluetoothService.MSG_UNABLE_CONNECT: {
+                    /* finish loading animation */
+                    progressBar.setVisibility(View.GONE);
+
+                    Toast.makeText(getApplicationContext(), "Unable to connect device", Toast.LENGTH_SHORT).show();
+                    break;
+                }
+            }
+        }
+    };
+
+    public void home(View view) {
+        if (mBluetoothService != null) {
+            mBluetoothService.stop();
+        }
+        Intent intent = new Intent(PrintActivity.this, MainActivity.class);
+        startActivity(intent);
+        finish();
+    }
+
+    private static class PermissionHandler {
+
+        private static final int PERMISSION_REQUEST_CODE = 99;
+
+        private static void requestDefaultPermissions(Activity activity) {
+            List<String> permissionsToRequest;
+
+            /* check permission list */
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                /* set permission list to request */
+                String[] permissionList = new String[] {
+                        Manifest.permission.BLUETOOTH,
+                        Manifest.permission.BLUETOOTH_ADMIN,
+                };
+
+                /* validate and get not allowed permissions */
+                permissionsToRequest = PermissionHandler.getNotAllowedList(activity, permissionList);
+
+                /* request permissions */
+                if (permissionsToRequest.size() > 0) {
+                    /* request permission list */
+                    PermissionHandler.requestPermissions(activity, permissionsToRequest);
+                }
+            }
+        }
+
+        private static List<String> getNotAllowedList(Activity activity, String[] permissionList) {
+            List<String> requestList = new ArrayList<>();
+
+            if (permissionList.length > 0) {
+                for (String permission : permissionList) {
+                    if (ActivityCompat.checkSelfPermission(activity, permission) != PackageManager.PERMISSION_GRANTED) {
+                        requestList.add(permission);
+                    }
+                }
+            }
+
+            return requestList;
+        }
+
+        private static void requestPermissions(Activity activity, List<String> permissions) {
+            if (permissions.size() > 0) {
+                /* set permission array list to request */
+                String[] array = new String[permissions.size()];
+                for (int i = 0; i < permissions.size(); i++) {
+                    array[i] = permissions.get(i);
+                }
+
+                /* request permission */
+                ActivityCompat.requestPermissions(activity, array, PermissionHandler.PERMISSION_REQUEST_CODE);
+            }
+        }
+    }
+
+    @Override
+    public void onBackPressed() {
     }
 }
