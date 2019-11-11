@@ -42,6 +42,7 @@ public class TransferActivity extends AppCompatActivity implements BankView,Tran
     private ProgressBar progressBar;
     private List<BankResponse.DataBank> bankList;
     private String banktujuan,bankid,jumlah,namabank,norekin,nohpcard;
+    private Boolean isValid = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -88,34 +89,36 @@ public class TransferActivity extends AppCompatActivity implements BankView,Tran
     }
 
     public void transfer(final View view) {
-        jumlah = total.getText().toString();
-        norekin = norek.getText().toString();
-        nohpcard = nohp.getText().toString();
-        new iOSDialogBuilder(TransferActivity.this)
-                .setTitle("Peringatan")
-                .setSubtitle("Anda akan melakukan transfer dana"+"\n"
+        isValid = validation();
+        if (isValid){
+            jumlah = total.getText().toString();
+            norekin = norek.getText().toString();
+            nohpcard = nohp.getText().toString();
+            new iOSDialogBuilder(TransferActivity.this)
+                    .setTitle("Peringatan")
+                    .setSubtitle("Anda akan melakukan transfer dana"+"\n"
                             +"Nominal : "+jumlah+"\n"
                             +"Bank Tujuan : "+banktujuan+"\n"
                             +"Rekening Tujun : "+norekin+"\n"
                             +"Nomor Anda : "+nohpcard+"\n")
-                .setBoldPositiveLabel(true)
-                .setCancelable(false)
-                .setPositiveListener("Oke",new iOSDialogClickListener() {
-                    @Override
-                    public void onClick(iOSDialog dialog) {
-                        enableBT();
-                        transfer();
-                        dialog.dismiss();
-                    }
-                })
-                .setNegativeListener("Tidak", new iOSDialogClickListener() {
-                    @Override
-                    public void onClick(iOSDialog dialog) {
-                        dialog.dismiss();
-                    }
-                })
-                .build().show();
-
+                    .setBoldPositiveLabel(true)
+                    .setCancelable(false)
+                    .setPositiveListener("Oke",new iOSDialogClickListener() {
+                        @Override
+                        public void onClick(iOSDialog dialog) {
+                            enableBT();
+                            transfer();
+                            dialog.dismiss();
+                        }
+                    })
+                    .setNegativeListener("Tidak", new iOSDialogClickListener() {
+                        @Override
+                        public void onClick(iOSDialog dialog) {
+                            dialog.dismiss();
+                        }
+                    })
+                    .build().show();
+        }
     }
 
 
@@ -145,7 +148,8 @@ public class TransferActivity extends AppCompatActivity implements BankView,Tran
 
     @Override
     public void onError(String message) {
-
+        progressBar.setVisibility(View.GONE);
+        Toast.makeText(this, message, Toast.LENGTH_SHORT).show();
     }
 
     @Override
@@ -191,5 +195,31 @@ public class TransferActivity extends AppCompatActivity implements BankView,Tran
         Intent intent = new Intent(TransferActivity.this, MainActivity.class);
         startActivity(intent);
         finish();
+    }
+
+    private boolean validation() {
+        jumlah = total.getText().toString();
+        norekin = norek.getText().toString();
+        nohpcard = nohp.getText().toString();
+        banktujuan = bank.getText().toString();
+
+        if (jumlah.isEmpty()){
+            Toast.makeText(this, "Silakan masukkan nominal", Toast.LENGTH_SHORT).show();
+            total.requestFocus();
+            return false;
+        } else if (norekin.isEmpty()){
+            Toast.makeText(this, "Silakan masukkan nomor rekening", Toast.LENGTH_SHORT).show();
+            norek.requestFocus();
+            return false;
+        } else if (banktujuan.isEmpty()){
+            Toast.makeText(this, "Silakan masukkan bank tujuan", Toast.LENGTH_SHORT).show();
+            bank.requestFocus();
+            return false;
+        } else if (nohpcard.isEmpty()){
+            Toast.makeText(this, "Silakan masukkan nomor hp/nomor kartu anda", Toast.LENGTH_SHORT).show();
+            nohp.requestFocus();
+            return false;
+        }
+        return true;
     }
 }
