@@ -7,12 +7,18 @@ import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.graphics.drawable.BitmapDrawable;
+import android.graphics.drawable.Drawable;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
+import android.util.Log;
 import android.view.View;
 import android.widget.Button;
+import android.widget.ImageView;
 import android.widget.ProgressBar;
 import android.widget.Toast;
 
@@ -20,9 +26,17 @@ import android.widget.Toast;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
+import androidx.core.content.ContextCompat;
 
 
+import com.example.helper.PrintPic;
+import com.example.helper.Utils;
+
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.OutputStream;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 import bluetooth.miniprinter.library.BluetoothService;
@@ -40,6 +54,8 @@ public class PrintActivity extends AppCompatActivity implements View.OnClickList
     private boolean isRequestingBluetooth;
     private ProgressBar progressBar;
     private String nominal, bank, norek, sisa,tanya,jum,tot,belanja;
+    private Bitmap imgBitmap;
+    private ImageView imgprintable;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -61,6 +77,11 @@ public class PrintActivity extends AppCompatActivity implements View.OnClickList
     private void initUI() {
         print = findViewById(R.id.button9);
         progressBar = findViewById(R.id.progress_bar);
+
+        imgprintable = new ImageView(this);
+
+        imgBitmap = BitmapFactory.decodeResource(this.getResources(),R.drawable.logobpr);
+        imgprintable.setImageBitmap(imgBitmap);
 
         nominal = getIntent().getStringExtra("nominal");
         bank = getIntent().getStringExtra("bank");
@@ -123,18 +144,37 @@ public class PrintActivity extends AppCompatActivity implements View.OnClickList
         }
     }
 
+    private void printImage() {
+        if (imgprintable != null && imgBitmap != null) {
+            byte[] data = PrintHelper.getBytesToPrint(imgBitmap);
+
+            /* write data with default bytes */
+            PrintHelper.print(mBluetoothService, data);
+
+            /* manual write all bytes */
+            //PrintHelper.write(mBluetoothService, PrintHelper.ESC_Init);
+            //PrintHelper.write(mBluetoothService, PrintHelper.LF);
+            //PrintHelper.write(mBluetoothService, data);
+            //PrintHelper.write(mBluetoothService, PrintHelper.setPrintAndFeed(30));
+            //PrintHelper.write(mBluetoothService, PrintHelper.setPaperCut(1));
+            //PrintHelper.write(mBluetoothService, PrintHelper.setPrinterInit());
+        } else {
+            Toast.makeText(this, "tidak ada gambar", Toast.LENGTH_SHORT).show();
+        }
+    }
+
     @Override
     public void onClick(View view) {
         String printTransfer = "         TRANSFER DANA  \n"+"     "
                 +"  Berikut Detail Anda"+ "\n\n" +
                 "--------------------------------\n" +
-                "Anda Transfer ke Bank      "+bank+"\n"+
-                "Sejumlah            "+nominal+"\n"+
-                "No Rekeningnya       "+norek+"\n"+
-                "Saldomu Tinggal    "+sisa+"\n\n"+
+                "Nama Bank :      "+bank+"\n"+
+                "Nominal :            "+nominal+"\n"+
+                "No Rek :      "+norek+"\n"+
+                "Sisa Saldo :   "+sisa+"\n\n"+
                 "Simpan struk ini sebagai bukti transfer yang sah."+"\n\n"+
                 "       TERIMA KASIH\n" +
-                "         DAAADAAAAA     \n\n";
+                "\n";
 
         String printBelanja ="         PEMBAYARAN  \n"+"     "
                 +"  Merchant BPR"+ "\n\n" +
@@ -150,6 +190,7 @@ public class PrintActivity extends AppCompatActivity implements View.OnClickList
             startActivityForResult(intent, REQUEST_CONNECT_DEVICE);
         } else {
             if (tanya.equalsIgnoreCase("transfer")){
+                printImage();
                 PrintHelper.print(mBluetoothService, printTransfer);
             } else if (tanya.equalsIgnoreCase("belanja")){
                 PrintHelper.print(mBluetoothService, printBelanja);
