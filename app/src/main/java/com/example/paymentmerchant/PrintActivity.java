@@ -173,8 +173,7 @@ public class PrintActivity extends AppCompatActivity implements View.OnClickList
                 "No Rek :      "+norek+"\n"+
                 "Sisa Saldo :   "+sisa+"\n\n"+
                 "Simpan struk ini sebagai bukti transfer yang sah."+"\n\n"+
-                "       TERIMA KASIH\n" +
-                "\n";
+                "       TERIMA KASIH\n";
 
         String printBelanja ="         PEMBAYARAN  \n"+"     "
                 +"  Merchant BPR"+ "\n\n" +
@@ -183,7 +182,7 @@ public class PrintActivity extends AppCompatActivity implements View.OnClickList
                 "Harga                "+jum+ "\n\n"+
                 "Simpan struk ini sebagai bukti pembayaran yang sah."+"\n\n"+
                 "       TERIMA KASIH ATAS\n" +
-                "         KUNJUNGAN ANDA     \n\n";
+                "         KUNJUNGAN ANDA     \n";
 
         if (mBluetoothService.getState() != BluetoothService.STATE_CONNECTED) {
             Intent intent = new Intent(PrintActivity.this, DeviceListActivity.class);
@@ -193,6 +192,7 @@ public class PrintActivity extends AppCompatActivity implements View.OnClickList
                 printImage();
                 PrintHelper.print(mBluetoothService, printTransfer);
             } else if (tanya.equalsIgnoreCase("belanja")){
+                printImage();
                 PrintHelper.print(mBluetoothService, printBelanja);
             }
 
