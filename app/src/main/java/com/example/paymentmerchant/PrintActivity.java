@@ -53,7 +53,7 @@ public class PrintActivity extends AppCompatActivity implements View.OnClickList
     private BluetoothService mBluetoothService = null;
     private boolean isRequestingBluetooth;
     private ProgressBar progressBar;
-    private String nominal, bank, norek, sisa,tanya,jum,tot,belanja;
+    private String nominal, bank, norek, sisa,tanya,jum,tot,belanja,namarek;
     private Bitmap imgBitmap;
     private ImageView imgprintable;
 
@@ -87,6 +87,7 @@ public class PrintActivity extends AppCompatActivity implements View.OnClickList
         bank = getIntent().getStringExtra("bank");
         norek = getIntent().getStringExtra("norek");
         sisa = getIntent().getStringExtra("akhir");
+        namarek = getIntent().getStringExtra("namarek");
 
         jum = getIntent().getStringExtra("total");
 //        tot = getIntent().getStringExtra("psn");
@@ -171,6 +172,7 @@ public class PrintActivity extends AppCompatActivity implements View.OnClickList
                 "Nama Bank :      "+bank+"\n"+
                 "Nominal :            "+nominal+"\n"+
                 "No Rek :      "+norek+"\n"+
+                "Nama Pemilik Rek :      "+namarek+"\n"+
                 "Sisa Saldo :   "+sisa+"\n\n"+
                 "Simpan struk ini sebagai bukti transfer yang sah."+"\n\n"+
                 "       TERIMA KASIH\n";

@@ -10,6 +10,7 @@ import android.os.Bundle;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.AutoCompleteTextView;
+import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ProgressBar;
 import android.widget.Toast;
@@ -26,6 +27,7 @@ import com.example.view.TransferView;
 import com.gdacciaro.iOSDialog.iOSDialog;
 import com.gdacciaro.iOSDialog.iOSDialogBuilder;
 import com.gdacciaro.iOSDialog.iOSDialogClickListener;
+import com.google.android.material.bottomsheet.BottomSheetDialog;
 
 import java.util.List;
 
@@ -33,7 +35,7 @@ import io.reactivex.disposables.CompositeDisposable;
 
 public class TransferActivity extends AppCompatActivity implements BankView,TransferView {
     public static final String TAG="logv"+TransferActivity.class.getSimpleName();
-    private EditText total,norek,nohp;
+    private EditText total,norek,nohp,namarek;
     private AutoCompleteTextView bank;
     private BankPresenter bankPresenter;
     private TransferPresenter transferPresenter;
@@ -41,7 +43,7 @@ public class TransferActivity extends AppCompatActivity implements BankView,Tran
     private CompositeDisposable compositeDisposable;
     private ProgressBar progressBar;
     private List<BankResponse.DataBank> bankList;
-    private String banktujuan,bankid,jumlah,namabank,norekin,nohpcard;
+    private String banktujuan,bankid,jumlah,namabank,norekin,nohpcard,namarekening,pin;
     private Boolean isValid = false;
 
     @Override
@@ -69,6 +71,7 @@ public class TransferActivity extends AppCompatActivity implements BankView,Tran
         bank = findViewById(R.id.editText1);
         norek = findViewById(R.id.editText2);
         nohp = findViewById(R.id.editText3);
+        namarek = findViewById(R.id.editText4);
         progressBar = findViewById(R.id.progress_bar);
 
         compositeDisposable = new CompositeDisposable();
@@ -77,6 +80,7 @@ public class TransferActivity extends AppCompatActivity implements BankView,Tran
         transferPresenter = new TransferPresenter(this,compositeDisposable,apiInterface);
 
     }
+
     private void transfer(){
         transferPresenter.transfer(jumlah,bankid,norekin,nohpcard);
     }
@@ -89,36 +93,7 @@ public class TransferActivity extends AppCompatActivity implements BankView,Tran
     }
 
     public void transfer(final View view) {
-        isValid = validation();
-        if (isValid){
-            jumlah = total.getText().toString();
-            norekin = norek.getText().toString();
-            nohpcard = nohp.getText().toString();
-            new iOSDialogBuilder(TransferActivity.this)
-                    .setTitle("Peringatan")
-                    .setSubtitle("Anda akan melakukan transfer dana"+"\n"
-                            +"Nominal : "+jumlah+"\n"
-                            +"Bank Tujuan : "+banktujuan+"\n"
-                            +"Rekening Tujun : "+norekin+"\n"
-                            +"Nomor Anda : "+nohpcard+"\n")
-                    .setBoldPositiveLabel(true)
-                    .setCancelable(false)
-                    .setPositiveListener("Oke",new iOSDialogClickListener() {
-                        @Override
-                        public void onClick(iOSDialog dialog) {
-                            enableBT();
-                            transfer();
-                            dialog.dismiss();
-                        }
-                    })
-                    .setNegativeListener("Tidak", new iOSDialogClickListener() {
-                        @Override
-                        public void onClick(iOSDialog dialog) {
-                            dialog.dismiss();
-                        }
-                    })
-                    .build().show();
-        }
+        bottomSheet();
     }
 
 
@@ -171,6 +146,7 @@ public class TransferActivity extends AppCompatActivity implements BankView,Tran
             intent.putExtra("norek",transferResponse.getNorek());
             intent.putExtra("akhir",transferResponse.getSaldo_akhir());
             intent.putExtra("bank",banktujuan);
+            intent.putExtra("namarek",namarekening);
             intent.putExtra("tanya","transfer");
             startActivity(intent);
             finish();
@@ -202,6 +178,7 @@ public class TransferActivity extends AppCompatActivity implements BankView,Tran
         norekin = norek.getText().toString();
         nohpcard = nohp.getText().toString();
         banktujuan = bank.getText().toString();
+        namarekening = namarek.getText().toString();
 
         if (jumlah.isEmpty()){
             Toast.makeText(this, "Silakan masukkan nominal", Toast.LENGTH_SHORT).show();
@@ -219,7 +196,73 @@ public class TransferActivity extends AppCompatActivity implements BankView,Tran
             Toast.makeText(this, "Silakan masukkan nomor hp/nomor kartu anda", Toast.LENGTH_SHORT).show();
             nohp.requestFocus();
             return false;
+        } else if (namarekening.isEmpty()){
+            Toast.makeText(this, "Silakan nama pemilik rekening", Toast.LENGTH_SHORT).show();
+            namarek.requestFocus();
+            return false;
         }
         return true;
+    }
+
+    private void bottomSheet(){
+        View view = getLayoutInflater().inflate(R.layout.bottom_sheet_pin, null);
+
+        final BottomSheetDialog dialog = new BottomSheetDialog(TransferActivity.this);
+        dialog.setContentView(view);
+        dialog.show();
+        final EditText edtPin = view.findViewById(R.id.edtPin);
+
+        Button btnTest = view.findViewById(R.id.ok);
+        btnTest.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                pin = edtPin.getText().toString();
+                if (pin.isEmpty()){
+                    Toast.makeText(TransferActivity.this, "Silakan Masukkan PIN", Toast.LENGTH_SHORT).show();
+                    edtPin.requestFocus();
+                } else {
+                    doTransfer();
+                    progressBar.setVisibility(View.VISIBLE);
+                    dialog.dismiss();
+                }
+
+            }
+        });
+
+    }
+
+    protected void doTransfer(){
+        isValid = validation();
+        if (isValid){
+            jumlah = total.getText().toString();
+            norekin = norek.getText().toString();
+            nohpcard = nohp.getText().toString();
+            namarekening = namarek.getText().toString();
+            new iOSDialogBuilder(TransferActivity.this)
+                    .setTitle("Peringatan")
+                    .setSubtitle("Anda akan melakukan transfer dana"+"\n"
+                            +"Nominal : "+jumlah+"\n"
+                            +"Bank Tujuan : "+banktujuan+"\n"
+                            +"Rekening Tujuan : "+norekin+"\n"
+                            +"Nama Pemilik Rekening : "+namarekening+"\n"
+                            +"Nomor Anda : "+nohpcard+"\n")
+                    .setBoldPositiveLabel(true)
+                    .setCancelable(false)
+                    .setPositiveListener("Oke",new iOSDialogClickListener() {
+                        @Override
+                        public void onClick(iOSDialog dialog) {
+                            enableBT();
+                            transfer();
+                            dialog.dismiss();
+                        }
+                    })
+                    .setNegativeListener("Tidak", new iOSDialogClickListener() {
+                        @Override
+                        public void onClick(iOSDialog dialog) {
+                            dialog.dismiss();
+                        }
+                    })
+                    .build().show();
+        }
     }
 }
