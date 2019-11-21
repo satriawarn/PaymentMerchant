@@ -10,7 +10,7 @@ android {
         versionCode 1
         versionName "1.0"
         testInstrumentationRunner "android.suport.test.runner.AndroidJUnitRunner"
-        buildConfigField "String", "BASE_URL", "\"http://demo.corpysoft.com/demo-pos/api/index.php/merchant/\""
+        buildConfigField "String", "BASE_URL", "\"https://demo.corpysoft.com/demo-pos/api/index.php/merchant/\""
     }
     buildTypes {
         release {
