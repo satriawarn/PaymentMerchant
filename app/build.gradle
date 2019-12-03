@@ -69,4 +69,6 @@ dependencies {
     implementation 'com.gdacciaro:iosdialog:1.0.3'
 
     implementation 'com.github.thiagoyou:bluetooth-mini-printer-library:1.0.0'
+
+    implementation 'com.github.mukeshsolanki:android-otpview-pinview:2.0.1'
 }
