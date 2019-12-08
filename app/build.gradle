@@ -2,7 +2,7 @@ apply plugin: 'com.android.application'
 
 android {
     compileSdkVersion 28
-    buildToolsVersion "29.0.0"
+    buildToolsVersion "28.0.0"
     defaultConfig {
         applicationId "com.example.paymentmerchant"
         minSdkVersion 23
@@ -10,7 +10,8 @@ android {
         versionCode 1
         versionName "1.0"
         testInstrumentationRunner "android.suport.test.runner.AndroidJUnitRunner"
-        buildConfigField "String", "BASE_URL", "\"https://demo.corpysoft.com/demo-pos/api/index.php/merchant/\""
+//        buildConfigField "String", "BASE_URL", "\"https://demo.corpysoft.com/demo-pos/api/index.php/merchant/\""
+        buildConfigField "String", "BASE_URL", "\"https://bpg-solusi.com/api/index.php/merchant/\""
     }
     buildTypes {
         release {
@@ -66,6 +67,7 @@ dependencies {
                 exclude group: 'com.android.support'
             }
     implementation 'com.google.zxing:core:3.3.0'
+
     implementation 'com.gdacciaro:iosdialog:1.0.3'
 
     implementation 'com.github.thiagoyou:bluetooth-mini-printer-library:1.0.0'

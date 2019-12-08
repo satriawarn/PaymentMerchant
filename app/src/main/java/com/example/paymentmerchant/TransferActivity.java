@@ -82,7 +82,7 @@ public class TransferActivity extends AppCompatActivity implements BankView,Tran
     }
 
     private void transfer(){
-        transferPresenter.transfer(jumlah,bankid,norekin,nohpcard);
+        transferPresenter.transfer(jumlah,bankid,norekin,nohpcard,pin);
     }
 
     public void enableBT(){

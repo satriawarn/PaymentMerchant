@@ -20,8 +20,8 @@ public class QrPresenter {
         this.apiInterface = apiInterface;
     }
 
-    public void payQr(String id_merchant, String nominal, String qr_code){
-        compositeDisposable.add(apiInterface.qrPay(id_merchant, nominal, qr_code)
+    public void payQr(String id_merchant, String nominal, String qr_code, String user_pin){
+        compositeDisposable.add(apiInterface.qrPay(id_merchant, nominal, qr_code, user_pin)
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribeOn(Schedulers.io())
                 .subscribeWith(new DisposableObserver<QrResponse>() {

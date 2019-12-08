@@ -6,12 +6,15 @@ import androidx.core.content.ContextCompat;
 
 import android.Manifest;
 import android.bluetooth.BluetoothAdapter;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Button;
+import android.widget.EditText;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -21,6 +24,10 @@ import com.example.helper.ApiInterface;
 import com.example.presenter.QrPresenter;
 import com.example.response.QrResponse;
 import com.example.view.QrView;
+import com.gdacciaro.iOSDialog.iOSDialog;
+import com.gdacciaro.iOSDialog.iOSDialogBuilder;
+import com.gdacciaro.iOSDialog.iOSDialogClickListener;
+import com.google.android.material.bottomsheet.BottomSheetDialog;
 import com.google.zxing.Result;
 
 import io.reactivex.annotations.NonNull;
@@ -31,7 +38,7 @@ public class QRCodeActivity extends AppCompatActivity implements ZXingScannerVie
     public static final String TAG="log"+QRCodeActivity.class.getSimpleName();
     private ZXingScannerView mScannerView;
     static final Integer CAMERA = 0x1;
-    private String kodeKartu,id,nominal;
+    private String kodeKartu,id,nominal,user_pin;
     private CompositeDisposable compositeDisposable;
     private ProgressBar progressBar;
     private QrPresenter presenter;
@@ -47,9 +54,11 @@ public class QRCodeActivity extends AppCompatActivity implements ZXingScannerVie
         progressBar = findViewById(R.id.progress_bar);
         jumlah = findViewById(R.id.textView9);
         mScannerView = new ZXingScannerView(this);
+
         compositeDisposable = new CompositeDisposable();
         apiInterface = ApiClient.getClient().create(ApiInterface.class);
         presenter = new QrPresenter(this,compositeDisposable,apiInterface);
+
         contentFrame.addView(mScannerView);
         askForPermission(Manifest.permission.CAMERA, CAMERA);
 
@@ -123,9 +132,9 @@ public class QRCodeActivity extends AppCompatActivity implements ZXingScannerVie
     }
 
     private void payWithQr(){
-        Log.d(TAG, "payWithQr: ");
-        presenter.payQr(id,nominal,kodeKartu);
+        bottomSheet();
     }
+
     @Override
     public void onSuccess() {
         progressBar.setVisibility(View.GONE);
@@ -157,5 +166,31 @@ public class QRCodeActivity extends AppCompatActivity implements ZXingScannerVie
         Intent intent = new Intent(QRCodeActivity.this, BayarActivity.class);
         startActivity(intent);
         finish();
+    }
+
+    private void bottomSheet(){
+        View view = getLayoutInflater().inflate(R.layout.bottom_sheet_pin, null);
+
+        final BottomSheetDialog dialog = new BottomSheetDialog(this);
+        dialog.setContentView(view);
+        dialog.show();
+        dialog.setOnCancelListener(new DialogInterface.OnCancelListener() {
+            @Override
+            public void onCancel(DialogInterface dialogInterface) {
+                if (progressBar.isShown()){
+                    progressBar.setVisibility(View.INVISIBLE);
+                }
+            }
+        });
+        final EditText editPin = view.findViewById(R.id.edtPin);
+        Button btnTest = view.findViewById(R.id.ok);
+        btnTest.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                user_pin = editPin.getText().toString();
+                presenter.payQr(id,nominal,kodeKartu,user_pin);
+                dialog.dismiss();
+            }
+        });
     }
 }

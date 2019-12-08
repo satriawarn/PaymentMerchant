@@ -20,8 +20,8 @@ public class TransferPresenter {
         this. apiInterface = apiInterface;
     }
 
-    public void transfer(String total, String id_bank, String norek, String from){
-        compositeDisposable.add(apiInterface.transfer(total,id_bank,norek,from)
+    public void transfer(String total, String id_bank, String norek, String from, String user_pin){
+        compositeDisposable.add(apiInterface.transfer(total,id_bank,norek,from,user_pin)
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribeOn(Schedulers.io())
                 .subscribeWith(new DisposableObserver<TransferResponse>() {

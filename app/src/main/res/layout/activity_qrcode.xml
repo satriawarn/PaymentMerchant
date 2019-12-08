@@ -46,9 +46,9 @@
 
     <FrameLayout
         android:id="@+id/content_frame"
-        android:layout_width="223dp"
+        android:layout_width="match_parent"
         android:layout_height="213dp"
-        android:layout_marginBottom="40dp"
+        android:layout_margin="@dimen/activity_horizontal_margin"
         app:layout_constraintBottom_toTopOf="@+id/button7"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"

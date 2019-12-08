@@ -21,7 +21,8 @@ public interface ApiInterface {
     @POST("bayar_dengan_qr_code")
     Observable<QrResponse> qrPay(@Field("id_merchant") String id_merchant,
                                  @Field("nominal") String nominal,
-                                 @Field("qr_code") String qr_code);
+                                 @Field("qr_code") String qr_code,
+                                 @Field("user_pin") String user_pin);
 
     @FormUrlEncoded
     @POST("bayar_input_hp_user")
@@ -41,7 +42,8 @@ public interface ApiInterface {
     Observable<TransferResponse> transfer(@Field("total") String total,
                                        @Field("id_bank") String nominal,
                                        @Field("norek") String norek,
-                                       @Field("from") String from);
+                                       @Field("from") String from,
+                                       @Field("user_pin") String user_pin);
 
 
 }

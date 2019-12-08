@@ -46,7 +46,8 @@ public class UpdatePembayaranActivity extends AppCompatActivity implements Updat
     }
 
     public void confirmation(View view) {
-        updateStatus();
+
+//        updateStatus();
     }
 
     private void updateStatus(){
