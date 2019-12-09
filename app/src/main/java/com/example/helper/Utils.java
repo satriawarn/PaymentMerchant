@@ -7,12 +7,17 @@ import android.graphics.BitmapFactory;
 import android.util.Log;
 
 import java.io.ByteArrayOutputStream;
+import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.List;
 
 public class Utils {
     private static final String PREFERENCES_FILE = "materialsample_settings";
 
+    public static String create(String id) {
+        DecimalFormat formatter = new DecimalFormat("##.##.##.##.##.##");
+        return formatter.format(id);
+    }
 
     public static String readSharedSetting(Context context, String settingName, String defaultValue) {
         SharedPreferences sharedPref = context.getSharedPreferences(PREFERENCES_FILE, Context.MODE_PRIVATE);

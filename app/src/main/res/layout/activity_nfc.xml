@@ -67,6 +67,7 @@
         android:background="@drawable/button_blue_rec"
         android:onClick="confirmation"
         android:text="Bayar"
+        android:visibility="invisible"
         android:textColor="#FFFF"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
