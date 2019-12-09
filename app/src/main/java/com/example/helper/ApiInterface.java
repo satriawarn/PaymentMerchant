@@ -25,6 +25,13 @@ public interface ApiInterface {
                                  @Field("user_pin") String user_pin);
 
     @FormUrlEncoded
+    @POST("bayar_dengan_nfc")
+    Observable<QrResponse> nfcPay(@Field("id_merchant") String id_merchant,
+                                 @Field("nominal") String nominal,
+                                 @Field("mac_address_kartu") String mac_address_kartu,
+                                 @Field("user_pin") String user_pin);
+
+    @FormUrlEncoded
     @POST("bayar_input_hp_user")
     Observable<PhoneResponse> phone(@Field("id_merchant") String id_merchant,
                                     @Field("nominal") String nominal,

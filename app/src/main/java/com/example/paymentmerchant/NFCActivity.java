@@ -23,14 +23,27 @@ import android.os.Bundle;
 import android.os.Parcelable;
 import android.util.Log;
 import android.view.View;
+import android.widget.Button;
+import android.widget.EditText;
+import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.example.helper.ApiClient;
+import com.example.helper.ApiInterface;
 import com.example.helper.Utils;
+import com.example.presenter.NfcPresenter;
+import com.example.presenter.QrPresenter;
+import com.example.response.QrResponse;
+import com.example.view.NfcView;
+import com.example.view.QrView;
+import com.google.android.material.bottomsheet.BottomSheetDialog;
 
 import java.io.UnsupportedEncodingException;
 
-public class NFCActivity extends AppCompatActivity {
+import io.reactivex.disposables.CompositeDisposable;
+
+public class NFCActivity extends AppCompatActivity implements NfcView {
     public static final String TAG="logv"+NFCActivity.class.getSimpleName();
 
     Tag detectedTag;
@@ -38,7 +51,12 @@ public class NFCActivity extends AppCompatActivity {
     IntentFilter[] readTagFilters;
     PendingIntent pendingIntent;
     TextView total,hasil;
-    String amount,hasilnya;
+    String amount,hasilnya,user_pin,akhir,id,nominal;
+    ProgressBar progressBar;
+    CompositeDisposable compositeDisposable;
+    ApiInterface apiInterface;
+    NfcPresenter nfcPresenter;
+
 
     private final String[][] techList = new String[][] {
             new String[] {
@@ -58,9 +76,15 @@ public class NFCActivity extends AppCompatActivity {
         setContentView(R.layout.activity_nfc);
         total = findViewById(R.id.textView16);
         hasil = findViewById(R.id.textView14);
+        progressBar = findViewById(R.id.progress_bar);
 
         amount = getIntent().getStringExtra("nominal");
+        id="1";
         total.setText("Rp "+amount);
+
+        compositeDisposable = new CompositeDisposable();
+        apiInterface = ApiClient.getClient().create(ApiInterface.class);
+        nfcPresenter = new NfcPresenter(this,compositeDisposable,apiInterface);
 
 //        nfcAdapter = NfcAdapter.getDefaultAdapter(this);
 //        detectedTag = getIntent().getParcelableExtra(NfcAdapter.EXTRA_TAG);
@@ -79,8 +103,9 @@ public class NFCActivity extends AppCompatActivity {
         super.onNewIntent(intent);
         if (intent.getAction().equals(NfcAdapter.ACTION_TAG_DISCOVERED)) {
             hasilnya = ByteArrayToHexString(intent.getByteArrayExtra(NfcAdapter.EXTRA_ID));
-            hasilnya.substring(0,hasilnya.length()-1);
-            hasil.setText(hasilnya);
+            akhir = removeLastChar(hasilnya);
+            hasil.setText(akhir);
+            bottomSheet();
 //            Toast.makeText(this, ""+ ByteArrayToHexString(intent.getByteArrayExtra(NfcAdapter.EXTRA_ID)),
 //                    Toast.LENGTH_SHORT).show();
         }
@@ -109,6 +134,7 @@ public class NFCActivity extends AppCompatActivity {
         }
         return out;
     }
+
     public void readFromTag(Intent intent){
         Ndef ndef = Ndef.get(detectedTag);
         try{
@@ -161,8 +187,9 @@ public class NFCActivity extends AppCompatActivity {
     }
 
     public void confirmation(View view) {
-        Intent intent = new Intent(NFCActivity.this, ConfirmationActivity.class);
+        Intent intent = new Intent(NFCActivity.this, PrintActivity.class);
         startActivity(intent);
+        finish();
     }
 
     @Override
@@ -170,5 +197,51 @@ public class NFCActivity extends AppCompatActivity {
         Intent intent = new Intent(NFCActivity.this, BayarActivity.class);
         startActivity(intent);
         finish();
+    }
+
+    private void bottomSheet(){
+        View view = getLayoutInflater().inflate(R.layout.bottom_sheet_pin, null);
+
+        final BottomSheetDialog dialog = new BottomSheetDialog(this);
+        dialog.setContentView(view);
+        dialog.show();
+
+        final EditText editPin = view.findViewById(R.id.edtPin);
+        Button btnTest = view.findViewById(R.id.ok);
+        btnTest.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                user_pin = editPin.getText().toString();
+                progressBar.setVisibility(View.VISIBLE);
+                nfcPresenter.nfcPay(id,nominal,akhir,user_pin);
+                dialog.dismiss();
+            }
+        });
+    }
+
+    @Override
+    public void onSuccess() {
+        progressBar.setVisibility(View.GONE);
+    }
+
+    @Override
+    public void onError(String message) {
+        progressBar.setVisibility(View.GONE);
+        Toast.makeText(this, message, Toast.LENGTH_SHORT).show();
+
+    }
+
+    @Override
+    public void getNfcPay(QrResponse qrResponse) {
+        if (qrResponse.getStatus()==1){
+            Intent intent = new Intent(NFCActivity.this, PrintActivity.class);
+            intent.putExtra("belanja", qrResponse.getMessage());
+            intent.putExtra("total", qrResponse.getNominal_transaksi());
+            intent.putExtra("tanya","belanja");
+            startActivity(intent);
+            finish();
+        } else {
+            Toast.makeText(this, ""+qrResponse.getMessage(), Toast.LENGTH_SHORT).show();
+        }
     }
 }
