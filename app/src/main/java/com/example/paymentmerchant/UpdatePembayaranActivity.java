@@ -32,6 +32,7 @@ public class UpdatePembayaranActivity extends AppCompatActivity implements Updat
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_update_pembayaran);
+        progressBar = findViewById(R.id.progress_bar);
 
         jumlah = findViewById(R.id.textView23);
         ket = findViewById(R.id.textView22);
@@ -46,8 +47,8 @@ public class UpdatePembayaranActivity extends AppCompatActivity implements Updat
     }
 
     public void confirmation(View view) {
-
-//        updateStatus();
+        progressBar.setVisibility(View.VISIBLE);
+        updateStatus();
     }
 
     private void updateStatus(){
@@ -55,12 +56,13 @@ public class UpdatePembayaranActivity extends AppCompatActivity implements Updat
     }
     @Override
     public void onSuccess() {
-
+        progressBar.setVisibility(View.GONE);
     }
 
     @Override
     public void onError(String message) {
-
+        progressBar.setVisibility(View.GONE);
+        Toast.makeText(this, message, Toast.LENGTH_SHORT).show();
     }
 
     @Override

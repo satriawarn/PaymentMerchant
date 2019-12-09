@@ -118,7 +118,7 @@ public class QRCodeActivity extends AppCompatActivity implements ZXingScannerVie
 
     @Override
     public void handleResult(Result result) {
-        progressBar.setVisibility(View.VISIBLE);
+//        progressBar.setVisibility(View.VISIBLE);
         kodeKartu = result.getText();
 
         BluetoothAdapter mBluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
@@ -174,20 +174,14 @@ public class QRCodeActivity extends AppCompatActivity implements ZXingScannerVie
         final BottomSheetDialog dialog = new BottomSheetDialog(this);
         dialog.setContentView(view);
         dialog.show();
-        dialog.setOnCancelListener(new DialogInterface.OnCancelListener() {
-            @Override
-            public void onCancel(DialogInterface dialogInterface) {
-                if (progressBar.isShown()){
-                    progressBar.setVisibility(View.INVISIBLE);
-                }
-            }
-        });
+
         final EditText editPin = view.findViewById(R.id.edtPin);
         Button btnTest = view.findViewById(R.id.ok);
         btnTest.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 user_pin = editPin.getText().toString();
+                progressBar.setVisibility(View.VISIBLE);
                 presenter.payQr(id,nominal,kodeKartu,user_pin);
                 dialog.dismiss();
             }
