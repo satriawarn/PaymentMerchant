@@ -44,22 +44,22 @@ import java.io.UnsupportedEncodingException;
 import io.reactivex.disposables.CompositeDisposable;
 
 public class NFCActivity extends AppCompatActivity implements NfcView {
-    public static final String TAG="logv"+NFCActivity.class.getSimpleName();
+    public static final String TAG = "logv" + NFCActivity.class.getSimpleName();
 
     Tag detectedTag;
     NfcAdapter nfcAdapter;
     IntentFilter[] readTagFilters;
     PendingIntent pendingIntent;
-    TextView total,hasil;
-    String amount,hasilnya,user_pin,akhir,id,nominal;
+    TextView total, hasil;
+    String amount, hasilnya, user_pin, akhir, id, nominal;
     ProgressBar progressBar;
     CompositeDisposable compositeDisposable;
     ApiInterface apiInterface;
     NfcPresenter nfcPresenter;
 
 
-    private final String[][] techList = new String[][] {
-            new String[] {
+    private final String[][] techList = new String[][]{
+            new String[]{
                     NfcA.class.getName(),
                     NfcB.class.getName(),
                     NfcF.class.getName(),
@@ -79,12 +79,12 @@ public class NFCActivity extends AppCompatActivity implements NfcView {
         progressBar = findViewById(R.id.progress_bar);
 
         amount = getIntent().getStringExtra("nominal");
-        id="1";
-        total.setText("Rp "+amount);
+        id = "1";
+        total.setText("Rp " + amount);
 
         compositeDisposable = new CompositeDisposable();
         apiInterface = ApiClient.getClient().create(ApiInterface.class);
-        nfcPresenter = new NfcPresenter(this,compositeDisposable,apiInterface);
+        nfcPresenter = new NfcPresenter(this, compositeDisposable, apiInterface);
 
 //        nfcAdapter = NfcAdapter.getDefaultAdapter(this);
 //        detectedTag = getIntent().getParcelableExtra(NfcAdapter.EXTRA_TAG);
@@ -104,40 +104,33 @@ public class NFCActivity extends AppCompatActivity implements NfcView {
         if (intent.getAction().equals(NfcAdapter.ACTION_TAG_DISCOVERED)) {
             hasilnya = ByteArrayToHexString(intent.getByteArrayExtra(NfcAdapter.EXTRA_ID));
             akhir = removeLastChar(hasilnya);
-            hasil.setText(akhir);
+//            hasil.setText(akhir);
             bottomSheet();
-//            Toast.makeText(this, ""+ ByteArrayToHexString(intent.getByteArrayExtra(NfcAdapter.EXTRA_ID)),
-//                    Toast.LENGTH_SHORT).show();
         }
-//        setIntent(intent);
-//        if (getIntent().getAction().equals(NfcAdapter.ACTION_TAG_DISCOVERED)) {
-//            detectedTag = intent.getParcelableExtra(NfcAdapter.EXTRA_TAG);
-//            readFromTag(getIntent());
-//        }
     }
+
     private static String removeLastChar(String str) {
         return str.substring(0, str.length() - 1);
     }
 
-    private String ByteArrayToHexString(byte [] inarray) {
+    private String ByteArrayToHexString(byte[] inarray) {
         int i, j, in;
-        String [] hex = {"0","1","2","3","4","5","6","7","8","9","A","B","C","D","E","F"};
-        String out= "";
+        String[] hex = {"0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "A", "B", "C", "D", "E", "F"};
+        String out = "";
 
-        for(j = 0 ; j < inarray.length ; ++j)
-        {
+        for (j = 0; j < inarray.length; ++j) {
             in = (int) inarray[j] & 0xff;
             i = (in >> 4) & 0x0f;
             out += hex[i];
             i = in & 0x0f;
-            out += hex[i]+":";
+            out += hex[i] + ":";
         }
         return out;
     }
 
-    public void readFromTag(Intent intent){
+    public void readFromTag(Intent intent) {
         Ndef ndef = Ndef.get(detectedTag);
-        try{
+        try {
             ndef.connect();
 
             Parcelable[] messages = intent.getParcelableArrayExtra(NfcAdapter.EXTRA_NDEF_MESSAGES);
@@ -155,16 +148,13 @@ public class NFCActivity extends AppCompatActivity implements NfcView {
                 ndef.close();
 
             }
-        }
-        catch (Exception e) {
+        } catch (Exception e) {
             Toast.makeText(getApplicationContext(), "Cannot Read From Tag.", Toast.LENGTH_LONG).show();
         }
     }
 
     @Override
     protected void onResume() {
-//        super.onResume();
-//        nfcAdapter.enableForegroundDispatch(this, pendingIntent, readTagFilters, null);
         super.onResume();
         // creating pending intent:
         PendingIntent pendingIntent = PendingIntent.getActivity(this, 0, new Intent(this, getClass()).addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP), 0);
@@ -199,7 +189,7 @@ public class NFCActivity extends AppCompatActivity implements NfcView {
         finish();
     }
 
-    private void bottomSheet(){
+    private void bottomSheet() {
         View view = getLayoutInflater().inflate(R.layout.bottom_sheet_pin, null);
 
         final BottomSheetDialog dialog = new BottomSheetDialog(this);
@@ -213,7 +203,7 @@ public class NFCActivity extends AppCompatActivity implements NfcView {
             public void onClick(View view) {
                 user_pin = editPin.getText().toString();
                 progressBar.setVisibility(View.VISIBLE);
-                nfcPresenter.nfcPay(id,nominal,akhir,user_pin);
+                nfcPresenter.nfcPay(id, amount, akhir, user_pin);
                 dialog.dismiss();
             }
         });
@@ -233,15 +223,15 @@ public class NFCActivity extends AppCompatActivity implements NfcView {
 
     @Override
     public void getNfcPay(QrResponse qrResponse) {
-        if (qrResponse.getStatus()==1){
+        if (qrResponse.getStatus() == 1) {
             Intent intent = new Intent(NFCActivity.this, PrintActivity.class);
             intent.putExtra("belanja", qrResponse.getMessage());
             intent.putExtra("total", qrResponse.getNominal_transaksi());
-            intent.putExtra("tanya","belanja");
+            intent.putExtra("tanya", "belanja");
             startActivity(intent);
             finish();
         } else {
-            Toast.makeText(this, ""+qrResponse.getMessage(), Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, "" + qrResponse.getMessage(), Toast.LENGTH_SHORT).show();
         }
     }
 }

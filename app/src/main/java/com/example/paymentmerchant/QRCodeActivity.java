@@ -157,6 +157,8 @@ public class QRCodeActivity extends AppCompatActivity implements ZXingScannerVie
             finish();
         } else {
             Toast.makeText(this, ""+qrResponse.getMessage(), Toast.LENGTH_SHORT).show();
+            mScannerView.setResultHandler(this);
+            mScannerView.startCamera();
         }
 
     }
