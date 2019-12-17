@@ -31,6 +31,9 @@ import androidx.core.content.ContextCompat;
 
 import com.example.helper.PrintPic;
 import com.example.helper.Utils;
+import com.gdacciaro.iOSDialog.iOSDialog;
+import com.gdacciaro.iOSDialog.iOSDialogBuilder;
+import com.gdacciaro.iOSDialog.iOSDialogClickListener;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -46,14 +49,14 @@ import bluetooth.miniprinter.library.PrintHelper;
 
 public class PrintActivity extends AppCompatActivity implements View.OnClickListener {
     public static final String TAG = "logv" + PrintActivity.class.getSimpleName();
-    Button print,connect;
+    Button print, connect;
     private static final int REQUEST_ENABLE_BLUETOOTH = 100;
     private static final int REQUEST_CONNECT_DEVICE = 101;
     private BluetoothAdapter mBluetoothAdapter;
     private BluetoothService mBluetoothService = null;
     private boolean isRequestingBluetooth;
     private ProgressBar progressBar;
-    private String nominal, bank, norek, sisa,tanya,jum,tot,belanja,namarek;
+    private String nominal, bank, norek, sisa, tanya, jum, tot, belanja, namarek;
     private Bitmap imgBitmap;
     private ImageView imgprintable;
 
@@ -80,7 +83,7 @@ public class PrintActivity extends AppCompatActivity implements View.OnClickList
 
         imgprintable = new ImageView(this);
 
-        imgBitmap = BitmapFactory.decodeResource(this.getResources(),R.drawable.logobpr);
+        imgBitmap = BitmapFactory.decodeResource(this.getResources(), R.drawable.logobpr);
         imgprintable.setImageBitmap(imgBitmap);
 
         nominal = getIntent().getStringExtra("nominal");
@@ -166,23 +169,23 @@ public class PrintActivity extends AppCompatActivity implements View.OnClickList
 
     @Override
     public void onClick(View view) {
-        String printTransfer = "         TRANSFER DANA  \n"+"     "
-                +"  Berikut Detail Anda"+ "\n\n" +
+        String printTransfer = "         TRANSFER DANA  \n" + "     "
+                + "  Berikut Detail Anda" + "\n\n" +
                 "--------------------------------\n" +
-                "Nama Bank :      "+bank+"\n"+
-                "Nominal :            "+nominal+"\n"+
-                "No Rek :      "+norek+"\n"+
-                "Nama Pemilik Rek :      "+namarek+"\n"+
-                "Sisa Saldo :   "+sisa+"\n\n"+
-                "Simpan struk ini sebagai bukti transfer yang sah."+"\n\n"+
+                "Nama Bank :      " + bank + "\n" +
+                "Nominal :            " + nominal + "\n" +
+                "No Rek :      " + norek + "\n" +
+                "Nama Pemilik Rek :      " + namarek + "\n" +
+                "Sisa Saldo :   " + sisa + "\n\n" +
+                "Simpan struk ini sebagai bukti transfer yang sah." + "\n\n" +
                 "       TERIMA KASIH\n";
 
-        String printBelanja ="         PEMBAYARAN  \n"+"     "
-                +"  Merchant BPR"+ "\n\n" +
+        String printBelanja = "         PEMBAYARAN  \n" + "     "
+                + "  Merchant BPR" + "\n\n" +
                 "--------------------------------\n" +
-                "Keterangan               " +belanja+"\n"+
-                "Harga                "+jum+ "\n\n"+
-                "Simpan struk ini sebagai bukti pembayaran yang sah."+"\n\n"+
+                "Keterangan               " + belanja + "\n" +
+                "Harga                " + jum + "\n\n" +
+                "Simpan struk ini sebagai bukti pembayaran yang sah." + "\n\n" +
                 "       TERIMA KASIH ATAS\n" +
                 "         KUNJUNGAN ANDA     \n";
 
@@ -190,10 +193,10 @@ public class PrintActivity extends AppCompatActivity implements View.OnClickList
             Intent intent = new Intent(PrintActivity.this, DeviceListActivity.class);
             startActivityForResult(intent, REQUEST_CONNECT_DEVICE);
         } else {
-            if (tanya.equalsIgnoreCase("transfer")){
+            if (tanya.equalsIgnoreCase("transfer")) {
                 printImage();
                 PrintHelper.print(mBluetoothService, printTransfer);
-            } else if (tanya.equalsIgnoreCase("belanja")){
+            } else if (tanya.equalsIgnoreCase("belanja")) {
                 printImage();
                 PrintHelper.print(mBluetoothService, printBelanja);
             }
@@ -235,8 +238,36 @@ public class PrintActivity extends AppCompatActivity implements View.OnClickList
                     initUI();
                 } else {
                     /* user did not enable Bluetooth or an error occurred */
-                    Toast.makeText(this, "Bluetooth Tidak Berfungsi", Toast.LENGTH_SHORT).show();
-                    finish();
+                    new iOSDialogBuilder(PrintActivity.this)
+                            .setTitle("Bluetooth Tidak Aktif")
+                            .setSubtitle("Untuk melakukan cetak transaksi harus menyalakan bluetooth.")
+                            .setBoldPositiveLabel(true)
+                            .setCancelable(false)
+                            .setPositiveListener("Ya", new iOSDialogClickListener() {
+                                @Override
+                                public void onClick(iOSDialog dialog) {
+                                    dialog.dismiss();
+                                    if (!mBluetoothAdapter.isEnabled() && !isRequestingBluetooth) {
+                                        isRequestingBluetooth = true;
+                                        Intent enableIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
+                                        startActivityForResult(enableIntent, REQUEST_ENABLE_BLUETOOTH);
+                                    } else {
+                                        if (mBluetoothService == null) {
+                                            initUI();
+                                        }
+                                    }
+                                }
+                            })
+                            .setNegativeListener("Tidak", new iOSDialogClickListener() {
+                                @Override
+                                public void onClick(iOSDialog dialog) {
+                                    dialog.dismiss();
+                                    Intent intent = new Intent(PrintActivity.this, MainActivity.class);
+                                    startActivity(intent);
+                                    finish();
+                                }
+                            })
+                            .build().show();
                 }
                 break;
             }
@@ -312,7 +343,7 @@ public class PrintActivity extends AppCompatActivity implements View.OnClickList
             /* check permission list */
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
                 /* set permission list to request */
-                String[] permissionList = new String[] {
+                String[] permissionList = new String[]{
                         Manifest.permission.BLUETOOTH,
                         Manifest.permission.BLUETOOTH_ADMIN,
                 };
@@ -358,5 +389,8 @@ public class PrintActivity extends AppCompatActivity implements View.OnClickList
 
     @Override
     public void onBackPressed() {
+        Intent intent = new Intent(PrintActivity.this, BayarActivity.class);
+        startActivity(intent);
+        finish();
     }
 }

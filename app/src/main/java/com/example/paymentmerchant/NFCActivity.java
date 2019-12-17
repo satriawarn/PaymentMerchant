@@ -80,7 +80,7 @@ public class NFCActivity extends AppCompatActivity implements NfcView {
 
         amount = getIntent().getStringExtra("nominal");
         id = "1";
-        total.setText("Rp " + amount);
+        total.setText("Rp " + Utils.create(Double.parseDouble(amount)));
 
         compositeDisposable = new CompositeDisposable();
         apiInterface = ApiClient.getClient().create(ApiInterface.class);

@@ -12,6 +12,7 @@ import android.widget.Toast;
 
 import com.example.helper.ApiClient;
 import com.example.helper.ApiInterface;
+import com.example.helper.Utils;
 import com.example.presenter.MutasiPresenter;
 import com.example.presenter.PhonePresenter;
 import com.example.response.PhoneResponse;
@@ -42,7 +43,7 @@ public class SmartphoneActivity extends AppCompatActivity implements PhoneView {
 
         nominal = getIntent().getStringExtra("nominal");
         id = "1";
-        jumlah.setText("Rp "+getIntent().getStringExtra("nominal"));
+        jumlah.setText("Rp "+ Utils.create(Double.parseDouble(nominal)));
 
         compositeDisposable = new CompositeDisposable();
         apiInterface = ApiClient.getClient().create(ApiInterface.class);

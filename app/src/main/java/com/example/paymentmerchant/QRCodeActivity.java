@@ -21,6 +21,7 @@ import android.widget.Toast;
 
 import com.example.helper.ApiClient;
 import com.example.helper.ApiInterface;
+import com.example.helper.Utils;
 import com.example.presenter.QrPresenter;
 import com.example.response.QrResponse;
 import com.example.view.QrView;
@@ -63,7 +64,7 @@ public class QRCodeActivity extends AppCompatActivity implements ZXingScannerVie
         askForPermission(Manifest.permission.CAMERA, CAMERA);
 
         nominal = getIntent().getStringExtra("nominal");
-        jumlah.setText("Rp "+getIntent().getStringExtra("nominal"));
+        jumlah.setText("Rp "+ Utils.create(Double.parseDouble(nominal)));
         id = "1";
     }
 

@@ -14,9 +14,14 @@ import java.util.List;
 public class Utils {
     private static final String PREFERENCES_FILE = "materialsample_settings";
 
-    public static String create(String id) {
-        DecimalFormat formatter = new DecimalFormat("##.##.##.##.##.##");
-        return formatter.format(id);
+    public static String create(double amount) {
+        DecimalFormat formatter = new DecimalFormat("#,###,###.##");
+        return formatter.format(amount);
+    }
+
+    public static String create(int amount) {
+        DecimalFormat formatter = new DecimalFormat("#,###,###.##");
+        return formatter.format(amount);
     }
 
     public static String readSharedSetting(Context context, String settingName, String defaultValue) {
@@ -194,4 +199,5 @@ public class Utils {
     private static byte charToByte(char c) {
         return (byte) "0123456789ABCDEF".indexOf(c);
     }
+
 }
