@@ -1,5 +1,5 @@
 # PaymentMerchant
-This application using for transactions
+This application using for transactions on merchant
 - MVP architecture
 - Retrofit
 - RxJava
